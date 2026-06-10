@@ -1,0 +1,255 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Nunito:wght@400;500;600&display=swap');
+
+/* ── Design tokens ──────────────────────────────────── */
+:root {
+  --burgundy:    #8b1a2d;
+  --burnt-orange:#c4622d;
+  --amber:       #e8955a;
+  --cream:       #fdf6ec;
+  --warm-white:  #fffaf4;
+  --charcoal:    #2c1810;
+  --muted:       #7a6057;
+  --border:      #e8d5c4;
+
+  --shadow-card: 0 4px 16px rgba(44,24,16,.10), 0 1px 4px rgba(44,24,16,.06);
+  --shadow-hover:0 8px 28px rgba(44,24,16,.18);
+
+  --radius-card: 14px;
+  --radius-input: 22px;
+  --radius-btn:  22px;
+
+  font-family: 'Nunito', system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--charcoal);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Reset ──────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+/* blurred restaurant photo pinned behind everything */
+body::before {
+  content: '';
+  position: fixed;
+  inset: -20px;
+  z-index: -2;
+  background: url('https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=1920&q=80')
+              center / cover no-repeat;
+  filter: blur(7px);
+  transform: scale(1.05); /* hides blur fringe at edges */
+}
+
+/* warm cream tint overlay so text stays readable */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: rgba(250, 235, 210, 0.55);
+}
+
+#root {
+  width: 100%;
+}
+
+/* ── Typography ─────────────────────────────────────── */
+h1, h2 {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-weight: 700;
+  color: var(--burgundy);
+  margin: 0;
+}
+
+p { margin: 0; }
+
+/* ── App wrapper ────────────────────────────────────── */
+.app-wrapper {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 2.5rem 1.25rem 4rem;
+}
+
+.app-title {
+  font-size: clamp(1.8rem, 5vw, 2.8rem);
+  letter-spacing: -0.5px;
+  padding-bottom: 0.6rem;
+  margin-bottom: 2rem;
+  border-bottom: 3px solid var(--burnt-orange);
+}
+
+/* ── Shared card shell ──────────────────────────────── */
+.form-card,
+.dashboard-card {
+  background: rgba(255, 250, 244, 0.82);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 1.75rem 2rem;
+  box-shadow: var(--shadow-card);
+  margin-bottom: 1.75rem;
+}
+
+/* ── Entry form ─────────────────────────────────────── */
+.form-heading {
+  font-size: 1.3rem;
+  margin-bottom: 1.25rem;
+  color: var(--burgundy);
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.form-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.form-input {
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.95rem;
+  color: var(--charcoal);
+  background: var(--cream);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-input);
+  padding: 0.5rem 0.75rem;
+  outline: none;
+  transition: border-color .18s, box-shadow .18s;
+  min-width: 130px;
+}
+
+.form-input:focus {
+  border-color: var(--burnt-orange);
+  box-shadow: 0 0 0 3px rgba(196,98,45,.15);
+}
+
+.form-input:disabled {
+  background: #f0e9df;
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.btn-save {
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fff;
+  background: var(--burnt-orange);
+  border: none;
+  border-radius: var(--radius-btn);
+  padding: 0.55rem 1.4rem;
+  cursor: pointer;
+  transition: background .18s, transform .12s, box-shadow .18s;
+  box-shadow: 0 2px 6px rgba(196,98,45,.35);
+}
+
+.btn-save:hover:not(:disabled) {
+  background: var(--burgundy);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139,26,45,.35);
+}
+
+.btn-save:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.status-ok  { font-size: 0.9rem; font-weight: 600; color: #2d7a3a; }
+.status-err { font-size: 0.9rem; font-weight: 600; color: var(--burgundy); }
+
+/* ── Dashboard header (title + location filter) ─────── */
+.dashboard-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.location-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.location-select {
+  min-width: 170px;
+  cursor: pointer;
+}
+
+/* ── Stat tiles ─────────────────────────────────────── */
+.dashboard-heading {
+  font-size: 1.3rem;
+  margin-bottom: 1.25rem;
+  color: var(--burgundy);
+}
+
+.stat-grid {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.75rem;
+}
+
+.stat-tile {
+  background: var(--cream);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-input);
+  padding: 1rem 1.25rem;
+  min-width: 138px;
+  text-align: center;
+  transition: box-shadow .18s, transform .15s;
+}
+
+.stat-tile:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px);
+}
+
+.stat-tile-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.3rem;
+}
+
+.stat-tile-value {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.55rem;
+  font-weight: 700;
+  color: var(--burgundy);
+}
+
+/* ── Chart ──────────────────────────────────────────── */
+.chart-wrap {
+  margin-top: 0.5rem;
+}
+
+.empty-chart {
+  color: var(--muted);
+  font-style: italic;
+  margin-top: 0.75rem;
+}
