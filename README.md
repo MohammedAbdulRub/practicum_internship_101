@@ -90,5 +90,3 @@ Use `DATABASE_URL` to point the backend to a different SQLite file or another su
 - Build the frontend with `npm run build` and serve the static output
 - Update the frontend API base URL if the backend is hosted on a different domain
 ```
-
-If you want, I can also create a root `README.md` file in the workspace with this content.If you want, I can also create a root `README.md` file in the workspace with this content.
