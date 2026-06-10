@@ -7,7 +7,7 @@ const today = () => {
 }
 
 export default function EntryForm({ onSaved }) {
-  const [form, setForm] = useState({ date: today(), sales: '', customers: '' })
+  const [form, setForm] = useState({ date: today(), location: '', sales: '', customers: '' })
   const [status, setStatus] = useState(null)
 
   function handleChange(e) {
@@ -21,6 +21,7 @@ export default function EntryForm({ onSaved }) {
       await postLog({
         date: form.date,
         sector: 'restaurant',
+        location: form.location.trim(),
         sales: parseFloat(form.sales),
         customers: parseInt(form.customers, 10),
       })
@@ -32,51 +33,42 @@ export default function EntryForm({ onSaved }) {
   }
 
   return (
-    <section style={{ marginBottom: '2rem' }}>
-      <h2>Log Today&apos;s Entry</h2>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
-        <label>
+    <section className="form-card">
+      <h2 className="form-heading">Log Today&apos;s Entry</h2>
+      <form onSubmit={handleSubmit} className="form-row">
+        <label className="form-label">
           Date
-          <br />
-          <input type="date" name="date" value={form.date} onChange={handleChange} required />
+          <input type="date" name="date" value={form.date} onChange={handleChange} required className="form-input" />
         </label>
-        <label>
+        <label className="form-label">
           Sector
-          <br />
-          <input type="text" value="Restaurant" disabled style={{ background: '#f0f0f0' }} />
+          <input type="text" value="Restaurant" disabled className="form-input" />
         </label>
-        <label>
+        <label className="form-label">
+          Location
+          <input
+            type="text"
+            name="location"
+            value={form.location}
+            onChange={handleChange}
+            required
+            placeholder="e.g. Downtown"
+            className="form-input"
+          />
+        </label>
+        <label className="form-label">
           Sales ($)
-          <br />
-          <input
-            type="number"
-            name="sales"
-            value={form.sales}
-            onChange={handleChange}
-            min="0"
-            step="0.01"
-            required
-            placeholder="0.00"
-          />
+          <input type="number" name="sales" value={form.sales} onChange={handleChange} min="0" step="0.01" required placeholder="0.00" className="form-input" />
         </label>
-        <label>
+        <label className="form-label">
           Customers
-          <br />
-          <input
-            type="number"
-            name="customers"
-            value={form.customers}
-            onChange={handleChange}
-            min="0"
-            required
-            placeholder="0"
-          />
+          <input type="number" name="customers" value={form.customers} onChange={handleChange} min="0" required placeholder="0" className="form-input" />
         </label>
-        <button type="submit" disabled={status === 'saving'}>
+        <button type="submit" disabled={status === 'saving'} className="btn-save">
           {status === 'saving' ? 'Saving…' : 'Save Entry'}
         </button>
-        {status === 'saved' && <span style={{ color: 'green' }}>Saved!</span>}
-        {status === 'error' && <span style={{ color: 'red' }}>Error saving.</span>}
+        {status === 'saved' && <span className="status-ok">Saved!</span>}
+        {status === 'error' && <span className="status-err">Error saving.</span>}
       </form>
     </section>
   )

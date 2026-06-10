@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, status
+from typing import Optional
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 from database import get_db
 from schemas import LogEntryIn, LogEntryOut, SummaryOut
@@ -13,5 +14,8 @@ def create_or_update_log(entry: LogEntryIn, db: Session = Depends(get_db)):
 
 
 @router.get("/summary", response_model=SummaryOut)
-def get_summary(db: Session = Depends(get_db)):
-    return crud.get_summary(db)
+def get_summary(
+    location: Optional[str] = Query(default=None),
+    db: Session = Depends(get_db),
+):
+    return crud.get_summary(db, location)

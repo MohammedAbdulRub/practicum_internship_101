@@ -5,6 +5,7 @@ from typing import Optional
 class LogEntryIn(BaseModel):
     date: str
     sector: str = "restaurant"
+    location: str
     sales: float
     customers: int
 
@@ -31,3 +32,4 @@ class SummaryOut(BaseModel):
     totals: Totals
     time_series: list[TimeSeriesPoint]
     today: Optional[LogEntryOut]
+    locations: list[str]

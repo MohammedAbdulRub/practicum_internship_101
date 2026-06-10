@@ -5,24 +5,27 @@ import Dashboard from './components/Dashboard'
 
 export default function App() {
   const [summary, setSummary] = useState(null)
+  const [selectedLocation, setSelectedLocation] = useState(null)
 
   const refresh = useCallback(async () => {
     try {
-      setSummary(await getSummary())
+      setSummary(await getSummary(selectedLocation))
     } catch {
       setSummary(null)
     }
-  }, [])
+  }, [selectedLocation])
 
   useEffect(() => { refresh() }, [refresh])
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', padding: '2rem 1rem', fontFamily: 'sans-serif' }}>
-      <h1 style={{ borderBottom: '2px solid #4f86f7', paddingBottom: '0.5rem' }}>
-        Restaurant Daily Logger
-      </h1>
+    <div className="app-wrapper">
+      <h1 className="app-title">Restaurant Daily Logger</h1>
       <EntryForm onSaved={refresh} />
-      <Dashboard summary={summary} />
+      <Dashboard
+        summary={summary}
+        selectedLocation={selectedLocation}
+        onLocationChange={setSelectedLocation}
+      />
     </div>
   )
 }

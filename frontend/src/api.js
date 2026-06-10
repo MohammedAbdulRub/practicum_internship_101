@@ -10,8 +10,11 @@ export async function postLog(entry) {
   return res.json()
 }
 
-export async function getSummary() {
-  const res = await fetch(`${BASE}/api/summary`)
+export async function getSummary(location = null) {
+  const url = location
+    ? `${BASE}/api/summary?location=${encodeURIComponent(location)}`
+    : `${BASE}/api/summary`
+  const res = await fetch(url)
   if (!res.ok) throw new Error(await res.text())
   return res.json()
 }

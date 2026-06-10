@@ -37,7 +37,7 @@ def setup_db():
 app.dependency_overrides[get_db] = override_get_db
 client = TestClient(app)
 
-ENTRY = {"date": "2026-06-09", "sector": "restaurant", "sales": 1250.50, "customers": 85}
+ENTRY = {"date": "2026-06-09", "sector": "restaurant", "location": "Downtown", "sales": 1250.50, "customers": 85}
 
 
 def test_post_log_creates_entry():
@@ -45,6 +45,7 @@ def test_post_log_creates_entry():
     assert resp.status_code == 201
     body = resp.json()
     assert body["date"] == ENTRY["date"]
+    assert body["location"] == "Downtown"
     assert body["sales"] == ENTRY["sales"]
     assert body["customers"] == ENTRY["customers"]
     assert "id" in body
@@ -58,14 +59,13 @@ def test_post_log_updates_existing():
     body = resp.json()
     assert body["sales"] == 2000.00
     assert body["customers"] == 120
-    # same id — no duplicate row
     all_rows = client.get("/api/summary").json()
     assert all_rows["totals"]["entry_count"] == 1
 
 
 def test_get_summary_returns_totals():
-    entry1 = {"date": "2026-06-07", "sector": "restaurant", "sales": 900.00, "customers": 60}
-    entry2 = {"date": "2026-06-08", "sector": "restaurant", "sales": 1100.00, "customers": 70}
+    entry1 = {"date": "2026-06-07", "sector": "restaurant", "location": "Downtown", "sales": 900.00, "customers": 60}
+    entry2 = {"date": "2026-06-08", "sector": "restaurant", "location": "Downtown", "sales": 1100.00, "customers": 70}
     client.post("/api/log", json=entry1)
     client.post("/api/log", json=entry2)
 
@@ -77,3 +77,19 @@ def test_get_summary_returns_totals():
     assert body["totals"]["total_customers"] == 130
     assert len(body["time_series"]) == 2
     assert body["time_series"][0]["date"] == "2026-06-07"
+
+
+def test_summary_filters_by_location():
+    downtown = {"date": "2026-06-09", "sector": "restaurant", "location": "Downtown", "sales": 1000.00, "customers": 70}
+    airport = {"date": "2026-06-09", "sector": "restaurant", "location": "Airport", "sales": 500.00, "customers": 30}
+    client.post("/api/log", json=downtown)
+    client.post("/api/log", json=airport)
+
+    resp = client.get("/api/summary?location=Downtown")
+    body = resp.json()
+    assert body["totals"]["entry_count"] == 1
+    assert body["totals"]["total_sales"] == pytest.approx(1000.00)
+    assert body["locations"] == ["Airport", "Downtown"]
+
+    resp_all = client.get("/api/summary")
+    assert resp_all.json()["totals"]["entry_count"] == 2
