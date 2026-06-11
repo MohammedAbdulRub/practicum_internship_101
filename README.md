@@ -1,9 +1,3 @@
-Checking existing project documentation and structure to craft an accurate README.
-
-Read [](file:///c%3A/Users/AbdulRub/.claude/projects/Internship_practicum/CLAUDE.md)
-
-Read [](file:///c%3A/Users/AbdulRub/.claude/projects/Internship_practicum/frontend/README.md)
-
 ## README Content
 
 ```markdown
