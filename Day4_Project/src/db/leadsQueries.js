@@ -32,4 +32,19 @@ async function updateLeadStatus(id, status) {
   return rows[0] ?? null;
 }
 
-module.exports = { createLead, getAllLeads, updateLeadStatus };
+async function markPendingApproval(id) {
+  await pool.query(
+    `UPDATE leads SET pending_approval = true WHERE id = $1`,
+    [id]
+  );
+}
+
+async function approveLead(id) {
+  const { rows } = await pool.query(
+    `UPDATE leads SET pending_approval = false WHERE id = $1 RETURNING *`,
+    [id]
+  );
+  return rows[0] ?? null;
+}
+
+module.exports = { createLead, getAllLeads, updateLeadStatus, markPendingApproval, approveLead };

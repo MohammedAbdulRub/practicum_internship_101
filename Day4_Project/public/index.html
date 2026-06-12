@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SMB CRM</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #F1F5F9;
+      color: #1E293B;
+      min-height: 100vh;
+    }
+
+    /* ── Top bar ── */
+    header {
+      background: #0F172A;
+      color: #F8FAFC;
+      padding: 0 2rem;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    header h1 { font-size: 1.1rem; font-weight: 600; letter-spacing: 0.02em; }
+    header .dot { width: 8px; height: 8px; border-radius: 50%; background: #22D3EE; }
+    header .pending-count {
+      margin-left: auto;
+      background: #F59E0B;
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      display: none;
+    }
+    header .pending-count.visible { display: inline-block; }
+
+    /* ── Layout ── */
+    main {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 1.1rem 1.5rem;
+      border-bottom: 1px solid #F1F5F9;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .card-header h2 { font-size: 0.95rem; font-weight: 600; color: #0F172A; }
+    .card-header-right { display: flex; align-items: center; gap: 0.75rem; }
+
+    /* ── Filter tabs ── */
+    .filter-tabs { display: flex; gap: 0.25rem; }
+    .tab {
+      padding: 0.3rem 0.8rem;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid #E2E8F0;
+      background: transparent;
+      color: #64748B;
+      transition: all 0.15s;
+    }
+    .tab.active { background: #0F172A; color: #fff; border-color: #0F172A; }
+    .tab:not(.active):hover { background: #F8FAFC; }
+
+    /* ── Form ── */
+    .form-body { padding: 1.25rem 1.5rem; }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr auto;
+      gap: 0.75rem;
+      align-items: start;
+    }
+    .form-row input,
+    .form-row select {
+      width: 100%;
+      padding: 0.55rem 0.75rem;
+      border: 1px solid #E2E8F0;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      color: #1E293B;
+      background: #F8FAFC;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .form-row input:focus,
+    .form-row select:focus { border-color: #6366F1; background: #fff; }
+    .form-row input::placeholder { color: #94A3B8; }
+
+    .btn-primary {
+      padding: 0.55rem 1.25rem;
+      background: #6366F1;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .btn-primary:hover:not(:disabled) { background: #4F46E5; }
+    .btn-primary:disabled { background: #A5B4FC; cursor: not-allowed; }
+
+    .btn-ghost {
+      padding: 0.4rem 0.9rem;
+      background: transparent;
+      color: #64748B;
+      border: 1px solid #E2E8F0;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-ghost:hover { background: #F8FAFC; }
+
+    .form-msg { margin-top: 0.6rem; font-size: 0.8rem; min-height: 1rem; }
+    .form-msg.success { color: #059669; }
+    .form-msg.error   { color: #DC2626; }
+
+    /* ── Table ── */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    thead { background: #F8FAFC; }
+    th {
+      padding: 0.7rem 1.25rem;
+      text-align: left;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #64748B;
+      border-bottom: 1px solid #F1F5F9;
+    }
+    td {
+      padding: 0.85rem 1.25rem;
+      border-bottom: 1px solid #F8FAFC;
+      vertical-align: middle;
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: #FAFAFA; }
+    .muted { color: #64748B; }
+    .cell-name { font-weight: 500; }
+
+    /* ── Pending row ── */
+    tbody tr.row-pending { background: #FFFBEB; border-left: 3px solid #F59E0B; }
+    tbody tr.row-pending:hover { background: #FEF3C7; }
+    tbody tr.row-pending td:first-child { padding-left: calc(1.25rem - 3px); }
+
+    /* ── Status badges ── */
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      text-transform: capitalize;
+    }
+    .badge-new       { background: #F1F5F9; color: #475569; }
+    .badge-contacted { background: #DBEAFE; color: #1D4ED8; }
+    .badge-qualified { background: #FEF3C7; color: #92400E; }
+    .badge-converted { background: #D1FAE5; color: #065F46; }
+    .badge-lost      { background: #FEE2E2; color: #991B1B; }
+
+    /* ── Score chip ── */
+    .score-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px; height: 24px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+    .score-pending { background: #F1F5F9; color: #94A3B8; }
+    .score-low     { background: #FEE2E2; color: #B91C1C; }
+    .score-mid     { background: #FEF3C7; color: #92400E; }
+    .score-high    { background: #D1FAE5; color: #065F46; }
+
+    /* ── Outreach button ── */
+    .btn-view {
+      padding: 0.25rem 0.65rem;
+      background: #EEF2FF;
+      color: #4F46E5;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-view:hover { background: #E0E7FF; }
+
+    /* ── Approve button ── */
+    .btn-approve {
+      padding: 0.25rem 0.65rem;
+      background: #F59E0B;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    .btn-approve:hover:not(:disabled) { background: #D97706; }
+    .btn-approve:disabled { background: #FCD34D; cursor: not-allowed; }
+    .approved-check { font-size: 0.8rem; font-weight: 600; color: #059669; }
+
+    /* ── Modal ── */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal-box {
+      background: #fff;
+      border-radius: 14px;
+      padding: 1.5rem;
+      max-width: 540px;
+      width: 100%;
+      box-shadow: 0 24px 64px rgba(0,0,0,.18);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+      gap: 1rem;
+    }
+    .modal-title    { font-size: 0.95rem; font-weight: 600; color: #0F172A; }
+    .modal-subtitle { font-size: 0.78rem; color: #64748B; margin-top: 0.15rem; }
+    .btn-close {
+      background: none; border: none;
+      font-size: 1.25rem; cursor: pointer;
+      color: #94A3B8; line-height: 1; flex-shrink: 0;
+    }
+    .btn-close:hover { color: #374151; }
+    .modal-body {
+      font-size: 0.875rem;
+      line-height: 1.7;
+      color: #374151;
+      white-space: pre-wrap;
+      background: #F8FAFC;
+      border-radius: 8px;
+      padding: 1rem;
+    }
+
+    /* ── Empty / loading states ── */
+    .state-cell {
+      text-align: center;
+      padding: 2.5rem;
+      color: #94A3B8;
+      font-size: 0.875rem;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 700px) {
+      .form-row { grid-template-columns: 1fr 1fr; }
+      .form-row button { grid-column: span 2; }
+      th:nth-child(2), td:nth-child(2),
+      th:nth-child(4), td:nth-child(4),
+      th:nth-child(9), td:nth-child(9) { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="dot"></div>
+  <h1>SMB CRM</h1>
+  <span class="pending-count" id="pending-count"></span>
+</header>
+
+<main>
+
+  <!-- ── Create Lead ── -->
+  <div class="card">
+    <div class="card-header">
+      <h2>New Lead</h2>
+    </div>
+    <div class="form-body">
+      <form id="lead-form">
+        <div class="form-row">
+          <input id="f-name"    type="text"  placeholder="Name *"  required />
+          <input id="f-email"   type="email" placeholder="Email *" required />
+          <input id="f-company" type="text"  placeholder="Company" />
+          <select id="f-source">
+            <option value="">Source</option>
+            <option value="website">Website</option>
+            <option value="referral">Referral</option>
+            <option value="cold_outreach">Cold Outreach</option>
+            <option value="event">Event</option>
+          </select>
+          <button class="btn-primary" type="submit" id="submit-btn">Add Lead</button>
+        </div>
+        <p id="form-msg" class="form-msg"></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── Leads Table ── -->
+  <div class="card">
+    <div class="card-header">
+      <h2>Leads</h2>
+      <div class="card-header-right">
+        <div class="filter-tabs">
+          <button class="tab active" id="tab-all"     onclick="setFilter('all')">All</button>
+          <button class="tab"        id="tab-pending" onclick="setFilter('pending')">Pending Review</button>
+        </div>
+        <button class="btn-ghost" onclick="fetchLeads()">&#8635; Refresh</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Company</th>
+            <th>Source</th>
+            <th>Status</th>
+            <th>Score</th>
+            <th>Outreach</th>
+            <th>Approval</th>
+            <th>Created</th>
+          </tr>
+        </thead>
+        <tbody id="leads-tbody">
+          <tr><td colspan="9" class="state-cell">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<!-- ── Outreach modal ── -->
+<div class="modal-backdrop" id="modal" onclick="handleBackdropClick(event)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title"    id="modal-title"></div>
+        <div class="modal-subtitle" id="modal-subtitle"></div>
+      </div>
+      <button class="btn-close" onclick="closeModal()">&#x2715;</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+  /* ── Helpers ── */
+  function escHtml(str) {
+    return String(str ?? '')
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function scoreChip(score) {
+    if (score === 0) return `<span class="score-chip score-pending">—</span>`;
+    if (score < 40)  return `<span class="score-chip score-low">${score}</span>`;
+    if (score < 70)  return `<span class="score-chip score-mid">${score}</span>`;
+    return `<span class="score-chip score-high">${score}</span>`;
+  }
+
+  function outreachCell(lead) {
+    if (!lead.outreach_message) return `<span class="muted" style="font-size:0.8rem">—</span>`;
+    return `<button class="btn-view" onclick="showOutreach(event,${lead.id})">View</button>`;
+  }
+
+  function approvalCell(lead) {
+    if (lead.pending_approval) {
+      return `<button class="btn-approve" id="approve-${lead.id}" onclick="approveLead(event,${lead.id})">Approve</button>`;
+    }
+    if (lead.outreach_message) {
+      return `<span class="approved-check">&#10003; Approved</span>`;
+    }
+    return `<span class="muted" style="font-size:0.8rem">—</span>`;
+  }
+
+  function formatDate(iso) {
+    return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  /* ── State ── */
+  const leadsCache = {};
+  let   filterMode = 'all';
+
+  function setFilter(mode) {
+    filterMode = mode;
+    document.getElementById('tab-all').classList.toggle('active', mode === 'all');
+    document.getElementById('tab-pending').classList.toggle('active', mode === 'pending');
+    renderLeads();
+  }
+
+  /* ── Render ── */
+  function renderLeads() {
+    const tbody  = document.getElementById('leads-tbody');
+    const all    = Object.values(leadsCache).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    const leads  = filterMode === 'pending' ? all.filter(l => l.pending_approval) : all;
+    const pCount = all.filter(l => l.pending_approval).length;
+
+    const badge = document.getElementById('pending-count');
+    if (pCount > 0) {
+      badge.textContent = `${pCount} pending`;
+      badge.classList.add('visible');
+    } else {
+      badge.classList.remove('visible');
+    }
+
+    if (!leads.length) {
+      const msg = filterMode === 'pending' ? 'No leads pending review.' : 'No leads yet — add one above.';
+      tbody.innerHTML = `<tr><td colspan="9" class="state-cell">${msg}</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = leads.map(l => `
+      <tr class="${l.pending_approval ? 'row-pending' : ''}">
+        <td class="cell-name">${escHtml(l.name)}</td>
+        <td class="muted">${escHtml(l.email)}</td>
+        <td>${escHtml(l.company || '—')}</td>
+        <td class="muted">${escHtml(l.source || '—')}</td>
+        <td><span class="badge badge-${escHtml(l.status)}">${escHtml(l.status)}</span></td>
+        <td>${scoreChip(l.score)}</td>
+        <td>${outreachCell(l)}</td>
+        <td>${approvalCell(l)}</td>
+        <td class="muted">${formatDate(l.created_at)}</td>
+      </tr>
+    `).join('');
+  }
+
+  /* ── Fetch ── */
+  async function fetchLeads() {
+    const tbody = document.getElementById('leads-tbody');
+    try {
+      const res = await fetch('/leads');
+      if (!res.ok) throw new Error('API error');
+      const leads = await res.json();
+
+      Object.keys(leadsCache).forEach(k => delete leadsCache[k]);
+      leads.forEach(l => { leadsCache[l.id] = l; });
+      renderLeads();
+    } catch {
+      tbody.innerHTML = '<tr><td colspan="9" class="state-cell" style="color:#DC2626">Failed to load leads — is the API running?</td></tr>';
+    }
+  }
+
+  /* ── Approve ── */
+  async function approveLead(event, leadId) {
+    event.stopPropagation();
+    const btn = document.getElementById(`approve-${leadId}`);
+    if (btn) { btn.disabled = true; btn.textContent = '…'; }
+
+    try {
+      const res = await fetch(`/leads/${leadId}/approve`, { method: 'PATCH' });
+      if (!res.ok) throw new Error('API error');
+      const updated = await res.json();
+      leadsCache[leadId] = updated;
+      renderLeads();
+    } catch {
+      if (btn) { btn.disabled = false; btn.textContent = 'Approve'; }
+    }
+  }
+
+  /* ── Outreach modal ── */
+  function showOutreach(event, leadId) {
+    event.stopPropagation();
+    const lead = leadsCache[leadId];
+    if (!lead) return;
+    document.getElementById('modal-title').textContent    = `Outreach — ${lead.name}`;
+    document.getElementById('modal-subtitle').textContent = lead.company || '';
+    document.getElementById('modal-body').textContent     = lead.outreach_message;
+    document.getElementById('modal').classList.add('open');
+  }
+
+  function closeModal() { document.getElementById('modal').classList.remove('open'); }
+  function handleBackdropClick(e) { if (e.target === document.getElementById('modal')) closeModal(); }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+  /* ── Create lead form ── */
+  document.getElementById('lead-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('submit-btn');
+    const msg = document.getElementById('form-msg');
+
+    const body = {
+      name:    document.getElementById('f-name').value.trim(),
+      email:   document.getElementById('f-email').value.trim(),
+      company: document.getElementById('f-company').value.trim() || undefined,
+      source:  document.getElementById('f-source').value || undefined,
+    };
+
+    btn.disabled = true; btn.textContent = 'Adding…';
+    msg.textContent = ''; msg.className = 'form-msg';
+
+    try {
+      const res  = await fetch('/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        msg.textContent = data.error || 'Something went wrong.';
+        msg.className = 'form-msg error';
+        return;
+      }
+
+      e.target.reset();
+      msg.textContent = 'Lead created! Agents are running — refreshing in 10 s…';
+      msg.className = 'form-msg success';
+
+      await fetchLeads();
+      setTimeout(async () => { await fetchLeads(); msg.textContent = ''; }, 10000);
+
+    } catch {
+      msg.textContent = 'Network error — is the API running?';
+      msg.className = 'form-msg error';
+    } finally {
+      btn.disabled = false; btn.textContent = 'Add Lead';
+    }
+  });
+
+  fetchLeads();
+</script>
+</body>
+</html>

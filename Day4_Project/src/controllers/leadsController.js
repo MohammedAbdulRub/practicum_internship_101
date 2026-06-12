@@ -1,5 +1,5 @@
-const { createLead, getAllLeads, updateLeadStatus } = require('../db/leadsQueries');
-const { scoreLead } = require('../jobs/scoreLead');
+const { createLead, getAllLeads, updateLeadStatus, approveLead: approveLeadQuery } = require('../db/leadsQueries');
+const leadEvents = require('../events/leadEvents');
 
 const VALID_STATUSES = ['new', 'contacted', 'qualified', 'converted', 'lost'];
 
@@ -16,7 +16,7 @@ async function postLead(req, res) {
   try {
     const lead = await createLead({ name, email, phone, company, source, notes, assigned_to });
     res.status(201).json(lead);
-    setImmediate(() => scoreLead(lead));
+    setImmediate(() => leadEvents.emit('lead.created', lead));
     return;
   } catch (err) {
     return res.status(500).json({ error: 'Failed to create lead' });
@@ -67,4 +67,22 @@ async function patchLeadStatus(req, res) {
   }
 }
 
-module.exports = { postLead, listLeads, patchLeadStatus };
+async function approveLeadHandler(req, res) {
+  const id = parseInt(req.params.id, 10);
+
+  if (isNaN(id)) {
+    return res.status(400).json({ error: 'Lead ID must be a number' });
+  }
+
+  try {
+    const lead = await approveLeadQuery(id);
+    if (!lead) {
+      return res.status(404).json({ error: `Lead ${id} not found` });
+    }
+    return res.status(200).json(lead);
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to approve lead' });
+  }
+}
+
+module.exports = { postLead, listLeads, patchLeadStatus, approveLeadHandler };
