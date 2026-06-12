@@ -1,0 +1,21 @@
+{
+  "name": "smb-crm-backend",
+  "version": "1.0.0",
+  "description": "Scalable SMB CRM backend — practicum internship Day 4",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "db:init": "psql -h $DB_HOST -U $DB_USER -d $DB_NAME -f src/db/schema.sql",
+    "db:seed": "psql -h $DB_HOST -U $DB_USER -d $DB_NAME -f src/db/seed.sql"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "groq-sdk": "^1.2.1",
+    "pg": "^8.11.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}
